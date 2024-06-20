@@ -1,3 +1,253 @@
+# Poker Code
+
+### Card.h
+
+```cpp
+#ifndef CARD_H
+#define CARD_H
+
+// This file defines the Card type used to represent playing cards.
+// It also includes some useful constants and operators.
+
+#include <iostream>
+
+enum Rank {
+  TWO   =  2,
+  THREE =  3,
+  FOUR  =  4,
+  FIVE  =  5,
+  SIX   =  6,
+  SEVEN =  7,
+  EIGHT =  8,
+  NINE  =  9,
+  TEN   = 10,
+  JACK  = 11,
+  QUEEN = 12,
+  KING  = 13,
+  ACE   = 14
+};
+
+// An enum for suits.
+enum Suit {
+  CLUBS    = 0,
+  DIAMONDS = 1,
+  HEARTS   = 2,
+  SPADES   = 3
+};
+
+
+struct Card {
+  // Member Variables
+  Rank rank;
+  Suit suit;
+
+  // Default Constructor
+  // This creates a "Zero of Clubs"
+  Card() {
+    rank = Rank(0);
+    suit = Suit(0);
+  }
+
+  // User-Friendly Constructor 1
+  Card(int rank, Suit suit) {
+    this->rank = Rank(rank);
+    this->suit = suit;
+  }
+
+  // User-Friendly Constructor 2
+  Card(Rank rank, Suit suit) {
+    this->rank = rank;
+    this->suit = suit;
+  }
+
+  // A full set of comparison operators.
+  bool operator <  (Card other) const {return rank <  other.rank || (rank == other.rank && suit <  other.suit);}
+  bool operator <= (Card other) const {return rank <  other.rank || (rank == other.rank && suit <= other.suit);}
+  bool operator >  (Card other) const {return rank >  other.rank || (rank == other.rank && suit >  other.suit);}
+  bool operator >= (Card other) const {return rank >  other.rank || (rank == other.rank && suit >= other.suit);}
+  bool operator == (Card other) const {return rank == other.rank && suit == other.suit;}
+  bool operator != (Card other) const {return rank != other.rank || suit != other.suit;}
+
+  // A convenience function for printing.
+  void print() {
+    if(rank >= Rank::JACK && rank <= Rank::ACE) {
+      std::cout << "JQKA"[rank - Rank::JACK];
+    }
+    else {
+      std::cout << rank;
+    }
+
+    const static char* SUITS[] = {"♣", "♦", "♥", "♠"};
+    if(suit >= Suit::CLUBS && suit <= Suit::SPADES) {
+      std::cout << SUITS[suit];
+    }
+    else {
+      std::cout << '?' << '\n';
+    }
+  }
+};
+
+#endif
+
+```
+
+### Hand.h
+
+```cpp
+#ifndef HAND_H
+#define HAND_H
+
+#include "Card.h"
+
+class Hand {
+    private:
+    Card* cards;
+    size_t capacity;
+    size_t numcards;
+    void checkCapacity(size_t minCapacity);
+
+    public:
+    Hand();
+    Hand(const Hand& other);
+    ~Hand();
+    void add(Card card);
+    void clear();
+    size_t count() const;
+    Card get(size_t index) const;
+    void print() const;
+
+    void sort();
+    Hand bysuit(Suit suit) const;
+    Hand byrank(Rank rank) const;
+    Hand highcard() const;
+
+    Hand Straight() const;
+    Hand Flush() const;
+    Hand NofaKind(size_t N) const;
+    Hand Omit(const Hand& omitcards);
+
+};
+
+Hand* make_hand();
+Hand* best_hand(const Hand& cards);
+
+#endif
+```
+
+### Hand.cpp
+
+```cpp
+#include "Card.h"
+#include "Hand.h"
+
+// implementation of Hand.h
+
+// default constructor: initialize empty hand
+Hand::Hand() {
+    cards = nullptr;
+    capacity = 0;
+    numcards = 0;
+}
+
+// copy constructor: initialize as copy of other
+Hand::Hand(const Hand& other) {
+    capacity = other.capacity;
+    numcards = other.numcards;
+
+    cards = new Card[capacity];
+    for (size_t i = 0; i < numcards; ++i) {
+        cards[i] = other.cards[i];
+    }
+}
+
+// free all heap memory owned by hand
+Hand::~Hand() {
+    delete [] cards;
+}
+
+// add card to the hand
+void Hand::add(Card card) {
+    checkCapacity(numcards + 1);
+    cards[numcards++] = card;
+    
+    sort();
+}
+
+// remove all cards from the hand
+void Hand::clear() {
+    delete [] cards;
+    cards = nullptr;
+    capacity = 0;
+    numcards = 0;
+}
+
+// return number of cards in the hand
+size_t Hand::count() const {
+    return numcards;
+}
+
+// return card at index index (assume valid indices)
+Card Hand::get(size_t index) const {
+    return cards[index];
+}
+
+// print cards in the hand in order, separated by one space
+// character. print nothing after the final card (no space
+// and no newline)
+void Hand::print() const {
+    for (size_t i = 0; i < numcards; ++i) {
+        cards[i].print();
+        if (i != numcards - 1) {
+            std::cout << ' ';
+        }
+    }
+}
+
+// sorts descending
+void Hand::sort() {
+    for (size_t i = 1; i < numcards; ++i) {
+        Card key = cards[i];
+        int j = i - 1;
+        
+        while (j >= 0 && cards[j] < key) {
+            cards[j + 1] = cards[j];
+            j = j - 1;
+        }
+        cards[j + 1] = key;
+    }
+}
+
+// increases capacity
+void Hand::checkCapacity(size_t minCapacity) {
+    if (capacity >= minCapacity) {
+        return;
+    } else {
+        size_t newCapacity;
+        if (capacity == 0) {
+            newCapacity = 1;
+        } else {
+            newCapacity = capacity * 2;
+        }
+        Card* temp = new Card[newCapacity];
+        for (size_t i = 0; i < numcards; ++i) {
+            temp[i] = cards[i];
+        }
+
+    delete [] cards;
+    cards = temp;
+    capacity = newCapacity;
+    }
+}
+
+Hand* make_hand() {
+    return new Hand();
+}
+```
+
+### best_hand.cpp
+
+```cpp
+xps_find("bananas", "",   0) => 0
 #include "Card.h"
 #include "Hand.h"
 
@@ -278,3 +528,4 @@ Hand* best_hand(const Hand& cards) {
     // high card
     return new Hand(temp.highcard());
 }
+```
