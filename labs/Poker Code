@@ -1,7 +1,7 @@
 # Library Examples
 
 People were asking for examples of  how the XPS functions work,  so I wrote some
-up.  Note that the strings in these examples are  all XP strings, and should all
+up.  Note that the strings in these examples are  all XP strings, and should al
 be stored in memory in the XP string format.
 
 Remember that all lengths,  indices,  etc. that are passed as arguments refer to
